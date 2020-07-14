@@ -12,7 +12,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.getMealByDate = exports.getSchedule = exports.getMeal = exports.getSchoolInfo = void 0;
+exports.getTimetable = exports.getMealByDate = exports.getSchedule = exports.getMeal = exports.getSchoolInfo = void 0;
 /* eslint-disable no-useless-catch */
 const dotenv_1 = __importDefault(require("dotenv"));
 const request_promise_native_1 = __importDefault(require("request-promise-native"));
@@ -197,6 +197,36 @@ exports.getMealByDate = (schoolCode, ofcdcCode, mealCode, date) => __awaiter(voi
         }
     }
     catch (error) {
+        throw error;
+    }
+});
+/**
+ * @author 전광용 <jeon@kakao.com>
+ * @description 학교 학사 일정을 불러옵니다.
+ * @param {String} schoolCode 학교코드
+ * @param {String} ofcdcCode 관할 교육청 코드
+ * @param {String} startDate 검색 시작 일자 (YYYYMMDD)
+ * @param {String} endDate 검색 종료 일자 (YYYYMMDD)
+ * @returns {Object} 학교 학사 일정
+ */
+exports.getTimetable = (grade, room, schoolCode, ofcdcCode, startDate, endDate) => __awaiter(void 0, void 0, void 0, function* () {
+    // 설정 확인
+    configCheck();
+    try {
+        let result = yield request_promise_native_1.default.get(`https://open.neis.go.kr/hub/hisTimetable?ATPT_OFCDC_SC_CODE=${ofcdcCode}&SD_SCHUL_CODE=${schoolCode}&Type=JSON&KEY=${neis}&pSize=1000&pIndex=1&TI_FROM_YMD=${startDate}&TI_TO_YMD=${endDate}`);
+        result = JSON.parse(result);
+        if (!result.hisTimetable) {
+            return null;
+        }
+        const schoolTimetable = result.hisTimetable[1].row;
+        if (!Array.isArray(schoolTimetable)) {
+            return null;
+        }
+        const retVal = schoolTimetable.filter(data => data.GRADE === grade && data.CLRM_NM === room && data.ALL_TI_YMD === startDate).sort((a, b) => a - b);
+        return retVal;
+    }
+    catch (error) {
+        console.log(`[NEIS] 시간표 조회 중 오류:\n${error}`);
         throw error;
     }
 });

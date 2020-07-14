@@ -214,3 +214,40 @@ export const getMealByDate = async (schoolCode, ofcdcCode, mealCode, date) => {
     throw error;
   } 
 };
+
+/**
+ * @author 전광용 <jeon@kakao.com>
+ * @description 학교 학사 일정을 불러옵니다.
+ * @param {String} schoolCode 학교코드
+ * @param {String} ofcdcCode 관할 교육청 코드
+ * @param {String} startDate 검색 시작 일자 (YYYYMMDD)
+ * @param {String} endDate 검색 종료 일자 (YYYYMMDD)
+ * @returns {Object} 학교 학사 일정
+ */
+export const getTimetable = async (grade, room, schoolCode, ofcdcCode, startDate, endDate) => {
+  // 설정 확인
+  configCheck();
+
+  try {
+    let result = await request.get(`https://open.neis.go.kr/hub/hisTimetable?ATPT_OFCDC_SC_CODE=${ofcdcCode}&SD_SCHUL_CODE=${schoolCode}&Type=JSON&KEY=${neis}&pSize=1000&pIndex=1&TI_FROM_YMD=${startDate}&TI_TO_YMD=${endDate}`);
+    
+    result = JSON.parse(result);
+
+    if (!result.hisTimetable) {
+      return null;
+    }
+
+    const schoolTimetable = result.hisTimetable[1].row;
+
+    if (!Array.isArray(schoolTimetable)) {
+      return null;
+    }
+
+    const retVal = schoolTimetable.filter(data => data.GRADE === grade && data.CLRM_NM === room && data.ALL_TI_YMD === startDate).sort((a, b) => a - b);
+
+    return retVal;
+  } catch (error) {
+    console.log(`[NEIS] 시간표 조회 중 오류:\n${error}`);
+    throw error;
+  }
+};

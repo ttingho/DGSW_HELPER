@@ -35,9 +35,8 @@ const express_1 = require("express");
 const neis = __importStar(require("../lib/neis"));
 const moment_1 = __importDefault(require("moment"));
 const apiRouter = express_1.Router();
-const today = moment_1.default(new Date()).format('YYYYMMDD');
-const tomorrow = moment_1.default(new Date().setDate(new Date().getDate() + 1)).format('YYYYMMDD');
 apiRouter.post('/today-meal', (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    const today = moment_1.default(new Date()).format('YYYYMMDD');
     const breakfastToday = (yield neis.getMealByDate(process.env.SCHOOLCODE, process.env.OFCDC, 1, today))[0].DDISH_NM.replace(/<br\s*\/?>/mg, '\n');
     const lunchToday = (yield neis.getMealByDate(process.env.SCHOOLCODE, process.env.OFCDC, 2, today))[0].DDISH_NM.replace(/<br\s*\/?>/mg, '\n');
     const dinnerToday = (yield neis.getMealByDate(process.env.SCHOOLCODE, process.env.OFCDC, 3, today))[0].DDISH_NM.replace(/<br\s*\/?>/mg, '\n');
@@ -51,6 +50,7 @@ apiRouter.post('/today-meal', (req, res) => __awaiter(void 0, void 0, void 0, fu
     });
 }));
 apiRouter.post('/tomorrow-meal', (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    const tomorrow = moment_1.default(new Date().setDate(new Date().getDate() + 1)).format('YYYYMMDD');
     const breakfastTomorrow = (yield neis.getMealByDate(process.env.SCHOOLCODE, process.env.OFCDC, 1, tomorrow))[0].DDISH_NM.replace(/<br\s*\/?>/mg, '\n');
     const lunchTomorrow = (yield neis.getMealByDate(process.env.SCHOOLCODE, process.env.OFCDC, 2, tomorrow))[0].DDISH_NM.replace(/<br\s*\/?>/mg, '\n');
     const dinnerTomorrow = (yield neis.getMealByDate(process.env.SCHOOLCODE, process.env.OFCDC, 3, tomorrow))[0].DDISH_NM.replace(/<br\s*\/?>/mg, '\n');
@@ -64,6 +64,7 @@ apiRouter.post('/tomorrow-meal', (req, res) => __awaiter(void 0, void 0, void 0,
     });
 }));
 apiRouter.post('/today-schedule', (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    const today = moment_1.default(new Date()).format('YYYYMMDD');
     const scheduleToday = yield neis.getSchedule(process.env.SCHOOLCODE, process.env.OFCDC, today, today);
     if (scheduleToday === null) {
         return res.send({
@@ -103,6 +104,7 @@ apiRouter.post('/today-schedule', (req, res) => __awaiter(void 0, void 0, void 0
     });
 }));
 apiRouter.post('/tomorrow-schedule', (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    const tomorrow = moment_1.default(new Date().setDate(new Date().getDate() + 1)).format('YYYYMMDD');
     const scheduleTomorrow = yield neis.getSchedule(process.env.SCHOOLCODE, process.env.OFCDC, tomorrow, tomorrow);
     if (scheduleTomorrow === null) {
         return res.send({
@@ -142,8 +144,8 @@ apiRouter.post('/tomorrow-schedule', (req, res) => __awaiter(void 0, void 0, voi
     });
 }));
 apiRouter.post('/schedule', (req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    const schedule = yield neis.getSchedule(process.env.SCHOOLCODE, process.env.OFCDC, moment_1.default(tomorrow).format('YYYYMMDD'), moment_1.default(`${new Date().getFullYear()}-12-31`).format('YYYYMMDD'));
-    // console.log(schedule);
+    const today = moment_1.default(new Date()).format('YYYYMMDD');
+    const schedule = yield neis.getSchedule(process.env.SCHOOLCODE, process.env.OFCDC, today, moment_1.default(`${new Date().getFullYear()}-12-31`).format('YYYYMMDD'));
     if (schedule === null) {
         return res.send({
             version: '2.0',
@@ -159,14 +161,12 @@ apiRouter.post('/schedule', (req, res) => __awaiter(void 0, void 0, void 0, func
         });
     }
     const itemList = [];
-    console.log('object');
     for (const data in schedule) {
         itemList.push({
             title: schedule[data].name,
             description: moment_1.default(schedule[data].startDate).format('YYYY-MM-DD')
         });
     }
-    console.log(itemList);
     return res.send({
         version: '2.0',
         template: {
@@ -177,6 +177,76 @@ apiRouter.post('/schedule', (req, res) => __awaiter(void 0, void 0, void 0, func
                             title: '남은 일정!'
                         },
                         items: itemList.splice(0, 5)
+                    }
+                }
+            ]
+        }
+    });
+}));
+apiRouter.post('/today-timetable', (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    const userRequest = req.body.action.params;
+    const today = moment_1.default(new Date()).format('YYYYMMDD');
+    const timetable = yield neis.getTimetable(userRequest.grade, userRequest.room, process.env.SCHOOLCODE, process.env.OFCDC, today, today);
+    if (timetable === null) {
+        return res.send({
+            version: '2.0',
+            template: {
+                outputs: [
+                    {
+                        simpleText: {
+                            text: '시간표가 없습니다.'
+                        }
+                    }
+                ]
+            }
+        });
+    }
+    let text = '오늘의 시간표!\n\n';
+    for (const data in timetable) {
+        text += timetable[data].PERIO + '교시 - ' + timetable[data].ITRT_CNTNT + '\n\n';
+    }
+    return res.send({
+        version: '2.0',
+        template: {
+            outputs: [
+                {
+                    simpleText: {
+                        text
+                    }
+                }
+            ]
+        }
+    });
+}));
+apiRouter.post('/tomorrow-timetable', (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    const userRequest = req.body.action.params;
+    const tomorrow = moment_1.default(new Date().setDate(new Date().getDate() + 1)).format('YYYYMMDD');
+    const timetable = yield neis.getTimetable(userRequest.grade, userRequest.room, process.env.SCHOOLCODE, process.env.OFCDC, tomorrow, tomorrow);
+    if (timetable === null) {
+        return res.send({
+            version: '2.0',
+            template: {
+                outputs: [
+                    {
+                        simpleText: {
+                            text: '시간표가 없습니다.'
+                        }
+                    }
+                ]
+            }
+        });
+    }
+    let text = '내일의 시간표!\n\n';
+    for (const data in timetable) {
+        text += timetable[data].PERIO + '교시 - ' + timetable[data].ITRT_CNTNT + '\n\n';
+    }
+    return res.send({
+        version: '2.0',
+        template: {
+            outputs: [
+                {
+                    simpleText: {
+                        text
                     }
                 }
             ]
