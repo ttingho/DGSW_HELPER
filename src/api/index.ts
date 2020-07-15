@@ -210,8 +210,10 @@ apiRouter.post('/today-timetable', async (req, res) => {
 
   let text = '오늘의 시간표!\n\n';
 
-  for (const data in timetable) {
-    text += timetable[data].PERIO + '교시 - ' + timetable[data].ITRT_CNTNT + '\n\n';
+  for (let i = 0; i < timetable.length; i++) {
+    text += timetable[i].PERIO + '교시 - ' + timetable[i].ITRT_CNTNT;
+
+    if (i !== (timetable.length - 1)) text += '\n\n';
   }
 
   return res.send({
@@ -252,8 +254,10 @@ apiRouter.post('/tomorrow-timetable', async (req, res) => {
 
   let text = '내일의 시간표!\n\n';
 
-  for (const data in timetable) {
-    text += timetable[data].PERIO + '교시 - ' + timetable[data].ITRT_CNTNT + '\n\n';
+  for (let i = 0; i < timetable.length; i++) {
+    text += timetable[i].PERIO + '교시 - ' + timetable[i].ITRT_CNTNT;
+
+    if (i !== (timetable.length - 1)) text += '\n\n';
   }
 
   return res.send({

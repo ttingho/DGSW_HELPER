@@ -202,8 +202,10 @@ apiRouter.post('/today-timetable', (req, res) => __awaiter(void 0, void 0, void 
         });
     }
     let text = '오늘의 시간표!\n\n';
-    for (const data in timetable) {
-        text += timetable[data].PERIO + '교시 - ' + timetable[data].ITRT_CNTNT + '\n\n';
+    for (let i = 0; i < timetable.length; i++) {
+        text += timetable[i].PERIO + '교시 - ' + timetable[i].ITRT_CNTNT;
+        if (i !== (timetable.length - 1))
+            text += '\n\n';
     }
     return res.send({
         version: '2.0',
@@ -237,8 +239,10 @@ apiRouter.post('/tomorrow-timetable', (req, res) => __awaiter(void 0, void 0, vo
         });
     }
     let text = '내일의 시간표!\n\n';
-    for (const data in timetable) {
-        text += timetable[data].PERIO + '교시 - ' + timetable[data].ITRT_CNTNT + '\n\n';
+    for (let i = 0; i < timetable.length; i++) {
+        text += timetable[i].PERIO + '교시 - ' + timetable[i].ITRT_CNTNT;
+        if (i !== (timetable.length - 1))
+            text += '\n\n';
     }
     return res.send({
         version: '2.0',
